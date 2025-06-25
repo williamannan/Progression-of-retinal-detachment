@@ -1,5 +1,8 @@
 clear; close all; clc;
-%% ----- Globally defined parameters ---------
+%%% This file contains all the model parameters. It is the file used to run the function named "MainFlow" to generate 
+%%% the results
+
+%% ----- Defining the Global variables/parameters ---------
 global h Lx Ly Nx Ny Nb ds s a c xu xv yu yv vS vN epsilon Uint Vint Xel Xer
 global rhof rhos rhod mu Kb  alpha beta Kend NyPart CbFactor rhoMin
 global umax L0 E hstar  Xib Xiu sigmau sigmab rho0 eta Cb rho Re gamma l0
@@ -11,10 +14,9 @@ fvel = @(t,A,tau,k)( 4*A*exp(-k*(t/tau - 0.5))./(1 + exp(-k*(t/tau - 0.5)) ).^2 
 facc = @(t,A,tau,k)((4*A*(k/tau))*(exp(-2*k*(t/tau-0.5))-exp(-k*(t/tau-0.5)))./(1+exp(-k*(t/tau-0.5))).^3);
 %%%%%%%%%%%%======================================================================
 %% ------------ Parameter values --------------------
-NyPart = 18;                  %% Partition along the y axis
+NyPart = 20;                  %% Partition along the y axis
 
 CbFactor = 100;               %% Magnification of adhesion bonds Cb
-
 
 Ly0 = 2e-3;                   %% Height of fluid above eyewall (in m)
 Lx0 = 3*Ly0;                  %% Half the domain size along x (in m) 
@@ -22,14 +24,14 @@ L0 = Ly0;                     %% Characteristics length
 Lx = Lx0/L0;                  %% Dimensionless Length of half domain along x 
 Ly = Ly0/L0;                  %% Dimensionless Length of domain along y  
 
-k = 15;                       %% Parameter controling steepness of angular displacement
+k = 15;                       %% Parameter controlling steepness of angular displacement
 R = 1.2e-2;                   %% Radius of the eyeball
 tau = [0.04, 0.04];           %% Periods of saccadic eye rotations
 A =  [750,-750];              %% Peak angular velocities for various saccades
 dt = 2e-4/NyPart;             %% Actual Time step 
 tf = sum(tau);                %% Actual simulation time in seconds 
 t = 0:dt:tf;                  %% Actual Time parttitions
-Const_p = 1;                  %% Constant pressure intruoduce to account for Neumann BC
+Const_p = 1;                  %% Constant pressure introduced to account for Neumann BC
 Num_SaveData = 100;           %% Number of data saved for the GIF plot
 Nt = 50;                      %% Number of iteration for the p1_scheme
 
@@ -49,7 +51,7 @@ for n = 1:Num_Saccade
     end_time = start_time + tau(n);
     idx = ( t > start_time) & (t <= end_time);    %% Logical index for current segment
 
-    %%% Compute angular displacement (theta), velocity (omega) and aacceration(alpha) for this segment
+    %%% Compute angular displacement (theta), velocity (omega), and acceleration (alpha) for this segment
     %%% Note: We need to shift time to start at 0 for each segment
     Theta(idx) = fdisp(t(idx) - start_time, A(n), tau(n), k) + Theta0;  %% Angular displacement
 
@@ -64,12 +66,12 @@ for n = 1:Num_Saccade
     start_time = end_time;
 end
 
-%%% ----linear displacement, velocity and accelration------------ 
+%%% ----linear displacement, velocity, and acceleration ------------ 
 S = Theta*(pi/180)*R;           %% Linear displacement
 WallVel = Omega*(pi/180)*R;     %% Linear velocity
 WallAcc = Alpha*(pi/180)*R;     %% Linear acceleration
 
-%%% ----Nondimensionalizing linear displacement, velocity and accelration------------
+%%% ----Nondimensionalizing linear displacement, velocity, and acceleration ------------
 Vmax = max(abs(WallVel));        %% maximum linear velocity
 amax = max(abs(WallAcc));        %% maximum linear acceleration 
 S = S/L0;                        %% Dimensionless Lineae displacement 
@@ -78,7 +80,7 @@ WallAcc = WallAcc/amax;          %% Dimensionless Linear acceleration
 
 %%%%%%%%%%%%======================================================================
 %%%%%------- These model parameters are kept fixed -----------------------------------
-hstar = 2.0e-4;                %% tickness of retina in [m]
+hstar = 2.0e-4;                %% thickness of retina in [m]
 umax = Vmax;                   %% maximum wall velocity in  [m/sec]       
 E = 1.21e3;                    %% Yong mudulus in [N/m^2]; 
 mu = 1.065e-3;                 %% Dynamic viscosity in [Ns/m^2]
@@ -87,7 +89,7 @@ rhos = 1040;                   %% material/retina density in [kg/m^3]
 rhod = (rhos - rhof)*hstar;    %% Difference between material and fluid density
 Kb = (E*hstar^3)/12;           %% Bending stiffness in [Nm^2]
 
-%%%%%--These model parameters can be varied to until desire result is achieved-----------
+%%%%%--These model parameters can be varied until the desired result is achieved-----------
 alpha0 = -100;                 %% Coefficient of Goldstein feedback law  in [N/m^4]      
 beta0 = -10;                   %% Coefficient of Goldstein feedback law  in [Ns/m^4]
 Cb0 = 2.0;                     %% strength of adhesion bond in N/m                 
@@ -96,10 +98,10 @@ Kb = (E*hstar^3)/12;           %% Bending stiffness
 
 Xib0 = 600;                    %% Binding rate   
 Xiu0 =   0.6;                  %% Unbinding rate
-sigmab = 5e5*L0;               %% exponent of binding term
-sigmau = 1.8e5*L0;             %% 2e5*L0 exponent of binding term  
+sigmab = 5e5*L0;               %% binding affinity
+sigmau = 1.8e5*L0;             %% unbinding affinity
 
-%%%%%--These model parameters can be varied to until desire result is achieved----------- 
+%%%%%--These model parameters can be varied until the desired result is achieved----------- 
 alpha = (alpha0*L0^2)/(rhod*umax^2);     %% Dimensioless G. Feedback coefficient    
 beta = (beta0*L0)/(rhod*umax);           %% Dimensioless G. Feedback coefficient
 Cb = (Cb0*L0)/(rhod*umax^2);             %% Dimensioless adhession bond strength
@@ -140,7 +142,7 @@ xv = -Lx-h/2 : h : Lx+h/2;             %% x coordinate for the v verlocity
 yu = -h/2: h: Ly+h/2;                  %% y coordinate for the u verlocity
 yv = 0 : h : Ly;                       %% y coordinate for the v verlocity
 
-%% -------- Defining initial velocity and Lagrangian coordiate -----------
+%% -------- Defining initial velocity and Lagrangian coordinate -----------
 u0 = zeros(Ny+2, Nx+1);                %% Initial u-velocity
 u0(1,:) = 2*WallVel(1) - u0(2,:);      %% specifying lower boundary velocity for u 
 v0 = zeros(Ny+1, Nx+2);                %% Initial u-velocity
@@ -152,8 +154,3 @@ v0 = zeros(Ny+1, Nx+2);                %% Initial u-velocity
 tic
 [pc0,pc1, pp,pp1,pd1,pd2, pc, pdet, pu, pv]=MainFlow(LocPar,u0,v0,S,Theta,  WallAcc, WallVel,Omega);
 Time = toc
-
-% S = S*L0;
-% WallVel = WallVel*umax; 
-% 
-% plot(t, Theta, 'b', 'LineWidth',1.5)
